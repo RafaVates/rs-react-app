@@ -1,11 +1,10 @@
 import './App.css';
+import Principal from './pages/principal';
 
 function App() {
   return (
     <>
-      <h1 className="text-3xl font-bold underline text-red-200">
-        Vite + React
-      </h1>
+      <Principal />
     </>
   );
 }
