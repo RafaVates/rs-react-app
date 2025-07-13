@@ -31,7 +31,7 @@ export default class Header extends Component<SearchBarProps, SearchBarState> {
             type="text"
             value={this.state.query}
             onChange={this.handleInputChange}
-            placeholder="Search ..."
+            placeholder="Search ... Enter a valid region (Asia-America-North America-Europe)"
           />
           <button
             className="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white font-bold"
