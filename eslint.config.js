@@ -43,4 +43,7 @@ export default tseslint.config([
       },
     },
   },
+   {
+    ignores: ['coverage/**'],
+  },
 ]);
