@@ -18,6 +18,9 @@ export default class Header extends Component<SearchBarProps, SearchBarState> {
   };
 
   handleSearch = () => {
+    if (this.state.query.trim() === '') {
+      return;
+    }
     this.props.onSearch(this.state.query);
     localStorage.setItem('busqueda', this.state.query);
   };

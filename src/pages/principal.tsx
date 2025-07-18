@@ -11,7 +11,7 @@ interface State {
   loading: boolean;
   error: Error | null;
 }
-export default class Principal extends Component<State> {
+export default class Principal extends Component<Record<string, never>, State> {
   state = {
     name: localStorage.getItem('busqueda') || '',
     generated: false,
@@ -26,9 +26,6 @@ export default class Principal extends Component<State> {
   };
 
   handleError = () => {
-    if (!this.state.generated) {
-      this.fetchData('nothing');
-    }
     this.setState({ generated: !this.state.generated });
   };
 
@@ -49,18 +46,17 @@ export default class Principal extends Component<State> {
       const data = await response.json();
       this.setState({ data, loading: false });
     } catch (error) {
+      localStorage.setItem('busqueda', '');
       if (error instanceof Error) {
-        this.setState({ error, loading: false, generated: true });
-      } else {
-        this.setState({
-          error: new Error('An unknown error occurred'),
-          loading: false,
-        });
+        this.setState({ error, loading: false });
       }
     }
   }
 
   render() {
+    if (this.state.generated) {
+      throw new Error('A simulated error has occurred');
+    }
     return (
       <div className="flex flex-col h-screen w-full">
         <Header name={this.state.name} onSearch={this.handleSearchChange} />
@@ -70,7 +66,7 @@ export default class Principal extends Component<State> {
               Loading ... wait
             </p>
           )}
-          {!this.state.generated ? (
+          {!this.state.error ? (
             <Content data={this.state.data} />
           ) : (
             <ErrorPage />

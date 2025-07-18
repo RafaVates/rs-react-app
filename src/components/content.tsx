@@ -6,7 +6,7 @@ interface Data {
 
 export default class Content extends Component<Data> {
   render() {
-    const countries = this.props.data.slice(0, 20) || [];
+    const countries = this.props.data.slice(0, 20);
 
     return (
       <>
