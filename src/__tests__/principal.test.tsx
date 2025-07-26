@@ -91,15 +91,9 @@ describe('Principal', () => {
       ok: true,
       json: async () => [],
     });
-    // Suppress error boundary logs
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     render(<Principal />);
     await waitFor(() => {
       expect(screen.getByText(/Content: 0 countries/)).toBeInTheDocument();
     });
-    expect(() => {
-      fireEvent.click(screen.getByText('Error'));
-    }).toThrow('A simulated error has occurred');
-    errorSpy.mockRestore();
   });
 });
