@@ -1,45 +1,58 @@
-import '@testing-library/jest-dom/vitest';
-import { expect, describe, it, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Header from '../components/header';
 
-describe('Search component', () => {
-  const mockSearch = vi.fn();
-  const mockName = '';
-
+describe('Header', () => {
+  const onSearch = vi.fn();
   beforeEach(() => {
-    render(<Header name={mockName} onSearch={mockSearch} />);
+    onSearch.mockClear();
+    localStorage.clear();
   });
 
-  it('Button search exists', () => {
-    const button = screen.getByRole('button', { name: 'Search' });
-    expect(button).toBeInTheDocument();
-    expect(button.textContent).toBe('Search');
-  });
-
-  it('complete search input and send data', async () => {
-    const searchTerm = 'asia';
-    const input = screen.getByPlaceholderText(
-      'Search ... Enter a valid region (Asia-America-North America-Europe)'
+  it('renders Home and About links', () => {
+    render(
+      <MemoryRouter>
+        <Header name="" onSearch={onSearch} />
+      </MemoryRouter>
     );
-    const button = screen.getByRole('button', { name: 'Search' });
-
-    await userEvent.type(input, searchTerm);
-    await userEvent.click(button);
-
-    expect(mockSearch).toHaveBeenCalled();
-    expect(mockSearch).toHaveBeenCalledWith(searchTerm);
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('About')).toBeInTheDocument();
   });
 
-  it('null input value', async () => {
-    const input = screen.getByPlaceholderText(
-      'Search ... Enter a valid region (Asia-America-North America-Europe)'
+  it('renders input with initial value', () => {
+    render(
+      <MemoryRouter>
+        <Header name="Asia" onSearch={onSearch} />
+      </MemoryRouter>
     );
-    const button = screen.getByRole('button', { name: 'Search' });
-    await userEvent.click(button);
+    expect(screen.getByDisplayValue('Asia')).toBeInTheDocument();
+  });
 
-    expect(input.textContent).toBe('');
-    expect(mockSearch).toHaveBeenCalled();
+  it('calls onSearch and sets localStorage when Search is clicked', () => {
+    render(
+      <MemoryRouter>
+        <Header name="" onSearch={onSearch} />
+      </MemoryRouter>
+    );
+    const input = screen.getByPlaceholderText(/Search/i);
+    fireEvent.change(input, { target: { value: 'Europe' } });
+    fireEvent.click(screen.getByText('Search'));
+    expect(onSearch).toHaveBeenCalledWith('Europe');
+    expect(localStorage.getItem('busqueda')).toBe('Europe');
+  });
+
+  it('does not call onSearch or set localStorage if input is empty', () => {
+    render(
+      <MemoryRouter>
+        <Header name="" onSearch={onSearch} />
+      </MemoryRouter>
+    );
+    fireEvent.change(screen.getByPlaceholderText(/Search/i), {
+      target: { value: '   ' },
+    });
+    fireEvent.click(screen.getByText('Search'));
+    expect(onSearch).not.toHaveBeenCalled();
+    expect(localStorage.getItem('busqueda')).toBeNull();
   });
 });

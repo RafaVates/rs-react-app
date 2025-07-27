@@ -3,4 +3,6 @@ export default interface Country {
     common: string;
   };
   population: number;
+  flags: { png: string };
+  capital: string[];
 }

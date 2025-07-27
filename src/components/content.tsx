@@ -1,15 +1,16 @@
-import { Component } from 'react';
-import type Country from '../components/country';
+import { Link, Outlet } from 'react-router-dom';
+import type Country from './country';
+
 interface Data {
   data: Country[];
 }
 
-export default class Content extends Component<Data> {
-  render() {
-    const countries = this.props.data.slice(0, 20);
+const Content = ({ data }: Data) => {
+  const countries = data;
 
-    return (
-      <>
+  return (
+    <>
+      <div>
         <h2 className="p-2 text-4xl font-extrabold">
           List of countries and its population
         </h2>
@@ -17,15 +18,24 @@ export default class Content extends Component<Data> {
           <ul className="p-4">
             {countries.map((country, i) => (
               <li key={i}>
-                <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to={`/${i}`}
+                  className="grid grid-cols-2 gap-2"
+                  state={{ country }}
+                >
                   <div className="w-60">{country.name.common}</div>
                   <div className="w-60">{country.population}</div>
-                </div>
+                </Link>
               </li>
             ))}
           </ul>
         </div>
-      </>
-    );
-  }
-}
+      </div>
+      <div>
+        <Outlet />
+      </div>
+    </>
+  );
+};
+
+export default Content;

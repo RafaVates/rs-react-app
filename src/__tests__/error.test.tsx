@@ -10,5 +10,5 @@ test('Server side error', () => {
   expect(h1).toBeInTheDocument();
   expect(p).toBeInTheDocument();
   expect(h1.textContent).toBe('Ops ... this is not a valid region');
-  expect(p.textContent).toBe('Press error button again to continue');
+  expect(p.textContent).toBe('Refresh page to go back to the app');
 });

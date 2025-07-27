@@ -1,84 +1,76 @@
-import { Component } from 'react';
-import Header from '../components/header';
+import { useState, useEffect, useContext } from 'react';
+
 import Content from '../components/content';
 import ErrorPage from '../components/error';
-import type Country from '../components/country';
+import SearchQueryContext from '../context/context';
 
-interface State {
-  name: string;
-  generated: boolean;
-  data: Country[];
-  loading: boolean;
-  error: Error | null;
-}
-export default class Principal extends Component<Record<string, never>, State> {
-  state = {
-    name: localStorage.getItem('busqueda') || '',
-    generated: false,
-    data: [],
-    loading: true,
-    error: null,
-  };
+const PAGE_SIZE = 20;
 
-  handleSearchChange = (e: string) => {
-    this.setState({ name: e });
-    this.fetchData(e);
-  };
+const Principal = () => {
+  const name = useContext(SearchQueryContext);
+  const [countries, setCountries] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [page, setPage] = useState(0);
 
-  handleError = () => {
-    this.setState({ generated: !this.state.generated });
-  };
-
-  componentDidMount(): void {
-    const initialValue = this.state.name || 'europe';
-    this.fetchData(initialValue);
-  }
-
-  async fetchData(region: string) {
-    try {
-      this.setState({ loading: true });
-      const response = await fetch(
-        `https://restcountries.com/v3.1/region/${region}`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+  useEffect(() => {
+    const fetchData = async (region: string) => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `https://restcountries.com/v3.1/region/${region}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCountries(data);
+        setIsLoading(false);
+      } catch (error) {
+        localStorage.setItem('busqueda', '');
+        setError(error instanceof Error ? error : new Error(String(error)));
+        setIsLoading(false);
       }
-      const data = await response.json();
-      this.setState({ data, loading: false });
-    } catch (error) {
-      localStorage.setItem('busqueda', '');
-      if (error instanceof Error) {
-        this.setState({ error, loading: false });
-      }
-    }
-  }
+    };
+    fetchData(name);
+  }, [name]);
 
-  render() {
-    if (this.state.generated) {
-      throw new Error('A simulated error has occurred');
-    }
-    return (
-      <div className="flex flex-col h-screen w-full">
-        <Header name={this.state.name} onSearch={this.handleSearchChange} />
-        <div className="flex-grow text-center p-10">
-          {this.state.loading && (
-            <p className="w-100 ml-50 bg-yellow-500 text-white font-bold py-2 px-4">
-              Loading ... wait
-            </p>
-          )}
-          {!this.state.error ? (
-            <Content data={this.state.data} />
-          ) : (
-            <ErrorPage />
-          )}
-        </div>
-        <button
-          className="w-40 ml-auto bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4"
-          onClick={this.handleError}
-        >
-          Error
-        </button>
+  const totalPages = Math.ceil(countries.length / PAGE_SIZE);
+  const start = page * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+
+  return (
+    <>
+      {isLoading && (
+        <p className="w-100 ml-50 bg-yellow-500 text-white font-bold py-2 px-4">
+          Loading ... wait
+        </p>
+      )}
+      <div className="flex justify-center grid grid-cols-2 gap-2">
+        {!error ? (
+          <Content data={countries.slice(start, end)} />
+        ) : (
+          <ErrorPage />
+        )}
+        {!error && (
+          <div className="flex justify-center gap-2 mt-4">
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                className={`px-3 py-1 rounded ${page === idx ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                onClick={() => {
+                  setPage(idx);
+                }}
+                disabled={page === idx}
+              >
+                {idx + 1}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    );
-  }
-}
+    </>
+  );
+};
+
+export default Principal;

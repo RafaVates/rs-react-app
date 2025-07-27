@@ -1,17 +1,54 @@
-import '@testing-library/jest-dom/vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { test, expect } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import Content from '../components/content';
 
-test('checking results', () => {
-  const mockData = [
-    { name: { common: 'Argentina' }, population: 45000000 },
-    { name: { common: 'Uruguay' }, population: 15000000 },
-  ];
+const mockCountries = [
+  {
+    name: { common: 'Spain' },
+    population: 47000000,
+    flags: { png: 'spain.png' },
+    capital: ['Madrid'],
+  },
+  {
+    name: { common: 'Japan' },
+    population: 125000000,
+    flags: { png: 'japan.png' },
+    capital: ['Tokyo'],
+  },
+];
 
-  render(<Content data={mockData} />);
-  const h2 = screen.getByRole('heading', { level: 2 });
-  expect(h2).toBeInTheDocument();
-  expect(h2.textContent).toBe('List of countries and its population');
-  expect(screen.getByText(/argentina/i)).toBeInTheDocument();
+describe('Content', () => {
+  it('renders the title', () => {
+    render(
+      <MemoryRouter>
+        <Content data={mockCountries} />
+      </MemoryRouter>
+    );
+    expect(
+      screen.getByText(/List of countries and its population/i)
+    ).toBeInTheDocument();
+  });
+
+  it('renders a list of countries', () => {
+    render(
+      <MemoryRouter>
+        <Content data={mockCountries} />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Spain')).toBeInTheDocument();
+    expect(screen.getByText('Japan')).toBeInTheDocument();
+    expect(screen.getByText('47000000')).toBeInTheDocument();
+    expect(screen.getByText('125000000')).toBeInTheDocument();
+  });
+
+  it('renders the correct number of list items', () => {
+    render(
+      <MemoryRouter>
+        <Content data={mockCountries} />
+      </MemoryRouter>
+    );
+    const items = screen.getAllByRole('listitem');
+    expect(items.length).toBe(2);
+  });
 });
