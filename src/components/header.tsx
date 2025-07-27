@@ -1,4 +1,6 @@
 import { useState, type ChangeEvent } from 'react';
+import { NavLink } from 'react-router-dom';
+
 interface SearchBarProps {
   name: string;
   onSearch: (query: string) => void;
@@ -22,6 +24,18 @@ const Header = ({ name, onSearch }: SearchBarProps) => {
   return (
     <div className="bg-gray-200 p-5">
       <div className="flex border border-gray-300 rounded-md overflow-hidden">
+        <NavLink
+          className="px-4 py-2 mx-2 bg-blue-500 hover:bg-blue-700 text-white font-bold"
+          to={'/'}
+        >
+          Home
+        </NavLink>
+        <NavLink
+          className="px-4 py-2 mx-2 bg-blue-500 hover:bg-blue-700 text-white font-bold"
+          to={'/about'}
+        >
+          About
+        </NavLink>
         <input
           className="w-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           type="text"

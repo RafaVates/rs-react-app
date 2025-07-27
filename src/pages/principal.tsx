@@ -1,18 +1,17 @@
-import { useState, useEffect } from 'react';
-import Header from '../components/header';
+import { useState, useEffect, useContext } from 'react';
+
 import Content from '../components/content';
 import ErrorPage from '../components/error';
+import SearchQueryContext from '../context/context';
+
+const PAGE_SIZE = 20;
 
 const Principal = () => {
-  const initialValue = localStorage.getItem('busqueda') || 'europe';
-  const [name, setName] = useState(initialValue);
+  const name = useContext(SearchQueryContext);
+  const [countries, setCountries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [countries, setCountries] = useState([]);
-
-  const handleSearchChange = (e: string) => {
-    setName(e);
-  };
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     const fetchData = async (region: string) => {
@@ -36,18 +35,41 @@ const Principal = () => {
     fetchData(name);
   }, [name]);
 
+  const totalPages = Math.ceil(countries.length / PAGE_SIZE);
+  const start = page * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+
   return (
-    <div className="flex flex-col h-screen w-full">
-      <Header name={name} onSearch={handleSearchChange} />
-      <div className="flex-grow text-center p-10">
-        {isLoading && (
-          <p className="w-100 ml-50 bg-yellow-500 text-white font-bold py-2 px-4">
-            Loading ... wait
-          </p>
+    <>
+      {isLoading && (
+        <p className="w-100 ml-50 bg-yellow-500 text-white font-bold py-2 px-4">
+          Loading ... wait
+        </p>
+      )}
+      <div className="flex justify-center grid grid-cols-2 gap-2">
+        {!error ? (
+          <Content data={countries.slice(start, end)} />
+        ) : (
+          <ErrorPage />
         )}
-        {!error ? <Content data={countries} /> : <ErrorPage />}
+        {!error && (
+          <div className="flex justify-center gap-2 mt-4">
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                className={`px-3 py-1 rounded ${page === idx ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                onClick={() => {
+                  setPage(idx);
+                }}
+                disabled={page === idx}
+              >
+                {idx + 1}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 };
 
