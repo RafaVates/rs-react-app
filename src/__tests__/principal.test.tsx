@@ -1,99 +1,96 @@
-import '@testing-library/jest-dom/vitest';
-import { expect, describe, vi, it, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import Principal from '../pages/principal';
 
-vi.mock('../components/header', () => ({
-  default: ({
-    name,
-    onSearch,
-  }: {
-    name: string;
-    onSearch: (value: string) => void;
-  }) => (
-    <div>
-      <span>Header: {name}</span>
-      <button onClick={() => onSearch('asia')}>Search Asia</button>
-    </div>
-  ),
-}));
+import type Country from '../components/country';
 vi.mock('../components/content', () => ({
-  default: ({
-    data,
-  }: {
-    data: Array<{ name: { common: string }; population: number }>;
-  }) => <div>Content: {data.length} countries</div>,
+  default: ({ data }: { data: Country[] }) => (
+    <div>Content: {data.length} countries</div>
+  ),
 }));
 vi.mock('../components/error', () => ({
   default: () => <div>ErrorPage</div>,
+}));
+vi.mock('../context/context', () => ({
+  __esModule: true,
+  default: 'asia',
 }));
 
 describe('Principal', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     localStorage.clear();
+    (window as unknown as { fetch?: typeof window.fetch }).fetch = undefined;
   });
 
   it('renders loading state initially', () => {
-    render(<Principal />);
+    window.fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => [] });
+    render(
+      <MemoryRouter>
+        <Principal />
+      </MemoryRouter>
+    );
     expect(screen.getByText(/Loading ... wait/i)).toBeInTheDocument();
   });
 
   it('renders content after successful fetch', async () => {
     window.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => [{ name: { common: 'Spain' }, population: 47_000_000 }],
+      json: async () =>
+        Array(25).fill({
+          name: { common: 'Spain' },
+          population: 47000000,
+          flags: { png: '' },
+          capital: ['Madrid'],
+        }),
     });
-    render(<Principal />);
+    render(
+      <MemoryRouter>
+        <Principal />
+      </MemoryRouter>
+    );
     await waitFor(() => {
-      expect(screen.getByText(/Content: 1 countries/)).toBeInTheDocument();
+      expect(screen.getByText(/Content: 20 countries/)).toBeInTheDocument();
     });
   });
 
   it('renders error page on fetch error', async () => {
-    window.fetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 404,
-    });
-    render(<Principal />);
+    window.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+    render(
+      <MemoryRouter>
+        <Principal />
+      </MemoryRouter>
+    );
     await waitFor(() => {
       expect(screen.getByText(/ErrorPage/)).toBeInTheDocument();
     });
   });
 
-  it('handles search change and fetches new data', async () => {
-    window.fetch = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [
-          { name: { common: 'Spain' }, population: 47_000_000 },
-        ],
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [
-          { name: { common: 'Japan' }, population: 125_000_000 },
-        ],
-      });
-    render(<Principal />);
-    await waitFor(() => {
-      expect(screen.getByText(/Content: 1 countries/)).toBeInTheDocument();
-    });
-    fireEvent.click(screen.getByText(/Search Asia/));
-    await waitFor(() => {
-      expect(screen.getByText(/Content: 1 countries/)).toBeInTheDocument();
-    });
-  });
-
-  it('throws error when error button is clicked', async () => {
+  it('changes page when pagination button is clicked', async () => {
     window.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => [],
+      json: async () =>
+        Array(25).fill({
+          name: { common: 'Spain' },
+          population: 47000000,
+          flags: { png: '' },
+          capital: ['Madrid'],
+        }),
     });
-    render(<Principal />);
+    render(
+      <MemoryRouter>
+        <Principal />
+      </MemoryRouter>
+    );
     await waitFor(() => {
-      expect(screen.getByText(/Content: 0 countries/)).toBeInTheDocument();
+      expect(screen.getByText(/Content: 20 countries/)).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText('2'));
+    await waitFor(() => {
+      expect(screen.getByText(/Content: 5 countries/)).toBeInTheDocument();
     });
   });
 });
