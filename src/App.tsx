@@ -1,11 +1,12 @@
 import './App.css';
-import Principal from './pages/principal';
+import ErrorBoundary from './components/error-boundary';
+import AppRoutes from './routes/routes';
 
 function App() {
   return (
-    <>
-      <Principal />
-    </>
+    <ErrorBoundary>
+      <AppRoutes />
+    </ErrorBoundary>
   );
 }
 
